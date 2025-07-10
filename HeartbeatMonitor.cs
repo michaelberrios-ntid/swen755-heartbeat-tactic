@@ -47,4 +47,14 @@ public class HeartbeatMonitor
             }
         }
     }
+
+    public List<string> GetSensorLogs()
+    {
+        List<string> logs = [];
+
+        foreach (KeyValuePair<string, ISensor> sensorKVP in sensors)
+            logs.Add(sensorKVP.Value.LastLog);
+
+        return logs;
+    }
 }

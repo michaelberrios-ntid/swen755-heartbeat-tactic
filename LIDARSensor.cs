@@ -1,17 +1,6 @@
-public class LIDARSensor : ISensor
+public class LIDARSensor : Sensor
 {
-    public bool IsAlive()
+    public LIDARSensor(string name) : base(name)
     {
-        throw new NotImplementedException();
-    }
-
-    public void Restart()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SendHeartbeat()
-    {
-        throw new NotImplementedException();
     }
 }

@@ -1,17 +1,6 @@
-public class RadarSensor : ISensor
+public class RadarSensor : Sensor
 {
-    public bool IsAlive()
+    public RadarSensor(string name) : base(name)
     {
-        throw new NotImplementedException();
-    }
-
-    public void Restart()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SendHeartbeat()
-    {
-        throw new NotImplementedException();
     }
 }

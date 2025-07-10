@@ -1,17 +1,6 @@
-public class CameraSensor : ISensor
+public class CameraSensor : Sensor
 {
-    public bool IsAlive()
+    public CameraSensor(string name) : base(name)
     {
-        throw new NotImplementedException();
-    }
-
-    public void Restart()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SendHeartbeat()
-    {
-        throw new NotImplementedException();
     }
 }
