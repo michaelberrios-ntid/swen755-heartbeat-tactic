@@ -1,10 +1,10 @@
 public class CameraSensor : Sensor
 {
-    public CameraSensor(string name) : base(name)
+    public CameraSensor(string id, string name) : base(id, name)
     {
         Log(
             SensorStatus.ADDED,
-            $"Camera sensor '{name}' initialized."
+            $"Camera Sensor '{name}' initialized."
         );
     }
 }

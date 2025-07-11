@@ -1,16 +1,14 @@
 public class HeartbeatMonitor
 {
-    const double HEALTHY_CAP = .9;
-
     Dictionary<string, ISensor> sensors;
     List<string> heartbeatLogs;
-    public bool HEALTHY { get; private set; }
+    public bool healthy { get; private set; }
 
     public HeartbeatMonitor()
     {
         sensors = new Dictionary<string, ISensor>();
         heartbeatLogs = new List<string>();
-        HEALTHY = true;
+        healthy = true;
     }
 
     public void Add(string id, ISensor sensor)
@@ -19,16 +17,43 @@ public class HeartbeatMonitor
             throw new ArgumentException($"Sensor with ID {id} already exists.");
 
         sensors.Add(id, sensor);
-        Log(id, sensor.Name + " added to heartbeat monitor.");
+        Log($"Sensor '{sensor.Name}' with ID '{id}' added.");
     }
 
-    public void Log(string sensorId, string log)
+    public void CheckHealth()
     {
-        if (!sensors.ContainsKey(sensorId))
-            throw new ArgumentException($"Sensor with ID {sensorId} does not exist.");
+        int totalHealhtySensors = 0;
 
-        heartbeatLogs.Add(
-            $"[{DateTime.Now:MM-dd-yyyy hh:mm:ss tt}] - Sensor ID: {sensorId}, Log: {log}"
-        );
+        foreach (var sensor in sensors.Values)
+        {
+            sensor.CheckHealth();
+            if (sensor.FallbackMode)
+                totalHealhtySensors++;
+        }
+
+        healthy = totalHealhtySensors != sensors.Count;
+    }
+
+    public void Log(string log)
+    {
+        heartbeatLogs.Add(log);
+    }
+
+    public string GetHeartbeatLogs()
+    {
+        string logs = "Heartbeat Logs:\n";
+        foreach (var log in heartbeatLogs)
+        {
+            logs += $"{log}\n";
+        }
+        logs += "=========================\n";
+
+        logs += "Sensor Status:\n";
+        foreach (var sensor in sensors.Values)
+        {
+            logs += sensor.GetLogs() + "\n";
+        }
+
+        return logs;
     }
 }

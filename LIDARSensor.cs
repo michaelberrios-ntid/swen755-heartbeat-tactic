@@ -1,10 +1,10 @@
 public class LIDARSensor : Sensor
 {
-    public LIDARSensor(string name) : base(name)
+    public LIDARSensor(string id, string name) : base(id, name)
     {
         Log(
             SensorStatus.ADDED,
-            $"LIDAR sensor '{name}' initialized."
+            $"LIDAR Sensor '{name}' initialized."
         );
     }
 }
