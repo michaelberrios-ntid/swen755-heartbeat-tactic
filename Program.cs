@@ -2,35 +2,21 @@
 var monitor = new HeartbeatMonitor();
 
 // Add sensors
-monitor.Add(new LIDARSensor("LIDAR Front"), "lidar-1");
-monitor.Add(new LIDARSensor("LIDAR Rear"), "lidar-2");
+monitor.Add("lidar-1", new LIDARSensor("LIDAR Front"));
+monitor.Add("lidar-2", new LIDARSensor("LIDAR Rear"));
 
-monitor.Add(new CameraSensor("Camera Left"), "camera-1");
-monitor.Add(new CameraSensor("Camera Right"), "camera-2");
+monitor.Add("camera-1", new CameraSensor("Camera Left"));
+monitor.Add("camera-2", new CameraSensor("Camera Right"));
 
-monitor.Add(new RadarSensor("Radar Front"), "radar-1");
-monitor.Add(new RadarSensor("Radar Rear"), "radar-2");
+monitor.Add("radar-1", new RadarSensor("Radar Front"));
+monitor.Add("radar-2", new RadarSensor("Radar Rear"));
 
 // Main loop
-while (true)
+while (monitor.HEALTHY)
 {
     Console.Clear();
-    monitor.CheckSensorsHealth();
 
-    Console.WriteLine("\nSensor Logs (latest entry):\n");
+    Console.WriteLine($"\nSensor Logs {DateTime.Now:MM-dd-yyyy hh:mm:ss tt}:\n");
 
-    foreach (string logs in monitor.GetSensorLogs())
-    {
-        if (logs.Contains("OK"))
-            Console.ForegroundColor = ConsoleColor.Green;
-        else if (logs.Contains("FAIL"))
-            Console.ForegroundColor = ConsoleColor.Red;
-        else
-            Console.ResetColor();
-
-        Console.WriteLine(logs);
-        Console.ResetColor();
-    }
-
-    Thread.Sleep(1000); // 300ms heartbeat interval
+    Thread.Sleep(1000);
 }
