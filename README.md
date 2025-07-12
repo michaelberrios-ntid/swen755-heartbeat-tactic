@@ -45,6 +45,12 @@ dotnet run --project SensorService
 dotnet run --project Monitor
 ```
 
+### (Optionally) Run Monitor with custom sleep time slower heartbeat checks
+#### Must be greater than 500ms
+```bash
+dotnet run --project Monitor -- 3000
+```
+
 ## Stop the Monitor
 ### Terminal 2
 ```bash
@@ -55,4 +61,51 @@ ctrl + C
 ### Terminal 1
 ```bash
 ctrl + C
+```
+
+# Sample Output
+## Healthy Sensor Status
+```bash
+Sensor Name                     Health  Status
+LIDAR Front               → 	92.69%	HEALTHY
+LIDAR Rear                → 	98.74%	HEALTHY
+Camera Left               → 	99.11%	HEALTHY
+Camera Right              → 	95.87%	HEALTHY
+Radar Front               → 	99.19%	HEALTHY
+Radar Rear                → 	95.22%	HEALTHY
+```
+
+## Sensor Fails Falls Back to Backup
+```bash
+Sensor Name                     Health  Status
+LIDAR Front               → 	54.98%	FAIL
+→ Switching to backup: LIDAR Front Backup
+LIDAR Rear                → 	95.11%	HEALTHY
+Camera Left               → 	92.06%	HEALTHY
+Camera Right              → 	92.43%	HEALTHY
+Radar Front               → 	90.59%	HEALTHY
+Radar Rear                → 	92.70%	HEALTHY
+```
+
+## Sensor Fails Falls Back to Backup
+```bash
+Sensor Name                     Health  Status
+LIDAR Front Backup        → 	92.50%	HEALTHY
+→ Primary recovered. Switching back to: LIDAR Front
+LIDAR Rear                → 	95.11%	HEALTHY
+Camera Left               → 	92.06%	HEALTHY
+Camera Right              → 	92.43%	HEALTHY
+Radar Front               → 	90.59%	HEALTHY
+Radar Rear                → 	92.70%	HEALTHY
+```
+
+## Sensors Warnings when Health Drops Below Threshold 90%
+```bash
+Sensor Name                     Health  Status
+LIDAR Front               → 	92.50%	HEALTHY
+LIDAR Rear                → 	95.11%	HEALTHY
+Camera Left               → 	85.00%	WARN
+Camera Right              → 	92.43%	HEALTHY
+Radar Front               → 	87.61%	WARN
+Radar Rear                → 	92.70%	HEALTHY
 ```
