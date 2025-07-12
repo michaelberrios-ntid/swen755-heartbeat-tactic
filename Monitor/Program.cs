@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
 using Shared;
 
@@ -46,7 +44,8 @@ namespace MonitorApp
                 {
                     string status = PingSensor("127.0.0.1", currentSensor.Port);
                     Console.WriteLine($"{currentSensor.Name} → {status}");
-
+                    
+                    // Handle the fallback logic if a primary sensor fails
                     if (status.StartsWith("FALLBACK") || status.StartsWith("FAIL"))
                     {
                         if (!currentSensor.IsBackup && backupLookup.TryGetValue(id, out var backup))
@@ -55,6 +54,7 @@ namespace MonitorApp
                             activeSensors[id] = backup;
                         }
                     }
+                    // Handle the fallback logic if a primary sensor recovers, switch back to the primary sensor
                     else if (currentSensor.IsBackup && primaryLookup.TryGetValue(id, out var primary))
                     {
                         // Check if primary is now healthy
@@ -72,6 +72,12 @@ namespace MonitorApp
             }
         }
 
+        /// <summary>
+        /// Pings a sensor and returns its status.
+        /// </summary>
+        /// <param name="host">The host address of the sensor.</param>
+        /// <param name="port">The port number of the sensor.</param>
+        /// <returns>Status message from the sensor.</returns>
         static string PingSensor(string host, int port)
         {
             try

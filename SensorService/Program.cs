@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using Shared;
@@ -10,6 +9,7 @@ namespace SensorService
     {
         static void Main(string[] args)
         {
+            // Start each sensor server in its own thread
             foreach (var sensor in SensorRegistry.All)
             {
                 var thread = new Thread(() => StartSensorServer(sensor));
@@ -20,9 +20,24 @@ namespace SensorService
             Thread.Sleep(Timeout.Infinite); // keep app running
         }
 
+        /// <summary>
+        /// Starts a sensor server for the given sensor information.
+        /// This is a sensor-cluster
+        /// </summary>
         static void StartSensorServer(SensorInfo sensorInfo)
         {
-            var sensor = new Sensor(sensorInfo.Id, sensorInfo.Name);
+            // Create a sensor instance based on the type by the metadata in SensorInfo
+            // SensorInfo includes the ID, name, port, and whether it is a backup sensor
+            // This allows us to instantiate the correct sensor type dynamically
+            // SensorRegistry lives in the Shared/ namespace
+            Sensor sensor = sensorInfo.Id switch
+            {
+                var id when id.StartsWith("lidar") => new LIDARSensor(sensorInfo.Id, sensorInfo.Name, sensorInfo.Port, sensorInfo.IsBackup),
+                var id when id.StartsWith("camera") => new CameraSensor(sensorInfo.Id, sensorInfo.Name, sensorInfo.Port, sensorInfo.IsBackup),
+                var id when id.StartsWith("radar") => new RadarSensor(sensorInfo.Id, sensorInfo.Name, sensorInfo.Port, sensorInfo.IsBackup),
+                _ => throw new ArgumentException($"Unknown sensor type in ID: {sensorInfo.Id}")
+            };
+
             var listener = new TcpListener(IPAddress.Loopback, sensorInfo.Port);
             listener.Start();
 
@@ -37,6 +52,7 @@ namespace SensorService
                 int read = stream.Read(buffer, 0, buffer.Length);
                 string request = Encoding.UTF8.GetString(buffer, 0, read).Trim().ToUpper();
 
+                // Handle the request based on the command received
                 string response = request switch
                 {
                     SensorMessages.PING => sensor.CheckHealth(),

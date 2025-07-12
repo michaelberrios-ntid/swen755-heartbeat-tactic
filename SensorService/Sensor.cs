@@ -1,12 +1,16 @@
-using System;
-using Shared;
-
 namespace SensorService
 {
+    /// <summary>
+    /// Base class for all sensors in the system.
+    /// This class provides common properties and methods for sensor management, including health checks and restart functionality.
+    /// Each specific sensor type (e.g., LIDARSensor, CameraSensor, RadarSensor) will inherit from this class.
+    /// </summary>
     public class Sensor
     {
         public string Id { get; }
         public string Name { get; }
+        public int Port { get; }
+        public bool IsBackup { get; }
         public double Health { get; private set; }
         public bool FallbackMode { get; private set; }
 
@@ -15,15 +19,36 @@ namespace SensorService
         private const double WARN_CAP = 0.8;
         private int fallbackRecover;
 
-        public Sensor(string id, string name)
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Sensor"/> class with the specified identifier and name.
+        /// Sets the initial health to 1.0, disables fallback mode, and resets the fallback recovery counter.
+        /// </summary>
+        /// <param name="id">The unique identifier for the sensor.</param>
+        /// <param name="name">The display name of the sensor.</param>
+        public Sensor(string id, string name, int port, bool isBackup = false)
         {
             Id = id;
             Name = name;
+            Port = port;
+            IsBackup = isBackup;
             Health = 1.0;
             FallbackMode = false;
             fallbackRecover = 0;
         }
 
+        /// <summary>
+        /// Checks the health of the sensor and returns a status message.
+        /// If the sensor is in fallback mode, it will increment the recovery counter.
+        /// If the health is below the warning threshold, it will enter fallback mode.
+        /// </summary>
+        /// <returns>A string indicating the health status of the sensor.</returns>
+        /// <remarks>
+        /// The health is randomly adjusted based on predefined probabilities:
+        /// - 90% chance to be between 0.9 and 1.0
+        /// - 8% chance to be between 0.8 and 0.9
+        /// - 2% chance to be between 0.5 and 0.8
+        /// </remarks>
         public string CheckHealth()
         {
             if (FallbackMode && fallbackRecover < 3)
@@ -53,6 +78,13 @@ namespace SensorService
             return $"HEALTHY {Health:F2}";
         }
 
+        /// <summary>
+        /// Restarts the sensor and resets its health and fallback mode.
+        /// </summary>
+        /// <returns>A string indicating the sensor has been restarted and its new health status.</returns>
+        /// <remarks>
+        /// This method resets the health to 0.95, disables fallback mode, and resets the fallback recovery counter.
+        /// </remarks>
         public string RestartAndReport()
         {
             FallbackMode = false;
