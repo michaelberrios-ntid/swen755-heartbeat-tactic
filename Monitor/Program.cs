@@ -6,8 +6,17 @@ namespace MonitorApp
 {
     class Program
     {
-        static void Main()
+        static void Main(string[] args)
         {
+            int sleepTime = 1000;
+
+            // Read arguments for specified sleep time between checks
+            if (args.Length > 0 && int.TryParse(args[0], out sleepTime) && sleepTime < 500)
+            {
+                Console.WriteLine("Sleep time must be at least 500ms. Using default of 1000ms.");
+                sleepTime = 1000;
+            }
+
             // Initialize backup sensors from registry
             var activeSensors = new Dictionary<string, SensorInfo>();
 
@@ -39,14 +48,15 @@ namespace MonitorApp
             {
                 Console.Clear();
                 Console.WriteLine($"Sensor Status - {DateTime.Now:HH:mm:ss}\n");
+                Console.WriteLine($"{"Sensor Name",-32}{"Health", -8}{"Status"}");
 
                 foreach (var (id, currentSensor) in activeSensors.ToList())
                 {
                     string status = PingSensor("127.0.0.1", currentSensor.Port);
-                    Console.WriteLine($"{currentSensor.Name} → {status}");
-                    
+                    Console.WriteLine($"{currentSensor.Name,-25} → {status}");
+
                     // Handle the fallback logic if a primary sensor fails
-                    if (status.StartsWith("FALLBACK") || status.StartsWith("FAIL"))
+                    if (status.Contains("FALLBACK") || status.Contains("FAIL"))
                     {
                         if (!currentSensor.IsBackup && backupLookup.TryGetValue(id, out var backup))
                         {
@@ -59,7 +69,7 @@ namespace MonitorApp
                     {
                         // Check if primary is now healthy
                         string primaryStatus = PingSensor("127.0.0.1", primary.Port);
-                        if (primaryStatus.StartsWith("HEALTHY") || primaryStatus.StartsWith("WARN"))
+                        if (primaryStatus.Contains("HEALTHY") || primaryStatus.Contains("WARN"))
                         {
                             Console.WriteLine($"→ Primary recovered. Switching back to: {primary.Name}");
                             activeSensors[id] = primary;
@@ -68,7 +78,7 @@ namespace MonitorApp
                 }
 
                 Console.WriteLine("\nPress Ctrl+C to exit.");
-                Thread.Sleep(1000);
+                Thread.Sleep(sleepTime);
             }
         }
 

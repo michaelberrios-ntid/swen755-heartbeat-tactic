@@ -54,7 +54,7 @@ namespace SensorService
             if (FallbackMode && fallbackRecover < 3)
             {
                 fallbackRecover++;
-                return $"FALLBACK {Health:F2}";
+                return Format(Health, "FALLBACK");
             }
 
             double roll = random.NextDouble();
@@ -69,13 +69,13 @@ namespace SensorService
             if (Health < WARN_CAP)
             {
                 FallbackMode = true;
-                return $"FAIL {Health:F2}";
+                return Format(Health, "FAIL");
             }
 
             if (Health < HEALTHY_CAP)
-                return $"WARN {Health:F2}";
+                return Format(Health, "WARN");
 
-            return $"HEALTHY {Health:F2}";
+            return Format(Health, "HEALTHY");
         }
 
         /// <summary>
@@ -90,7 +90,12 @@ namespace SensorService
             FallbackMode = false;
             fallbackRecover = 0;
             Health = 0.95;
-            return $"RESTARTED {Health:F2}";
+            return Format(Health, "RESTARTED");
+        }
+
+        private string Format(double health, string status)
+        {
+            return $"\t{health:P2}\t{status}";
         }
     }
 }
