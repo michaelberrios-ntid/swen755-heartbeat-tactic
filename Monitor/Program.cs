@@ -8,15 +8,33 @@ namespace MonitorApp
 {
     class Program
     {
-        static readonly Dictionary<string, (string name, int port)> sensors = new()
-        {
-            { "lidar-1", ("LIDAR Front", 9001) },
-            { "camera-1", ("Camera Left", 9002) },
-            { "radar-1", ("Radar Front", 9003) },
-        };
-
         static void Main()
         {
+            // Initialize backup sensors from registry
+            var activeSensors = new Dictionary<string, SensorInfo>();
+
+            foreach (var sensor in SensorRegistry.All)
+            {
+                if (!sensor.IsBackup)
+                    activeSensors[sensor.Id] = sensor;
+            }
+
+            // Used to switch TO backup if primary fails
+            var backupLookup = SensorRegistry.All
+                .Where(s => s.IsBackup)
+                .ToDictionary(
+                    backup => backup.Id.Replace("-backup", ""),
+                    backup => backup
+                );
+
+            // Used to switch BACK TO primary if it recovers
+            var primaryLookup = SensorRegistry.All
+                .Where(s => !s.IsBackup)
+                .ToDictionary(
+                    primary => primary.Id,
+                    primary => primary
+                );
+
             Console.WriteLine("Heartbeat Monitor starting up...");
 
             while (true)
@@ -24,10 +42,29 @@ namespace MonitorApp
                 Console.Clear();
                 Console.WriteLine($"Sensor Status - {DateTime.Now:HH:mm:ss}\n");
 
-                foreach (var sensor in SensorRegistry.All)
+                foreach (var (id, currentSensor) in activeSensors.ToList())
                 {
-                    string status = PingSensor("127.0.0.1", sensor.Port);
-                    Console.WriteLine($"{sensor.Name} [{sensor.Id}] → {status}");
+                    string status = PingSensor("127.0.0.1", currentSensor.Port);
+                    Console.WriteLine($"{currentSensor.Name} → {status}");
+
+                    if (status.StartsWith("FALLBACK") || status.StartsWith("FAIL"))
+                    {
+                        if (!currentSensor.IsBackup && backupLookup.TryGetValue(id, out var backup))
+                        {
+                            Console.WriteLine($"→ Switching to backup: {backup.Name}");
+                            activeSensors[id] = backup;
+                        }
+                    }
+                    else if (currentSensor.IsBackup && primaryLookup.TryGetValue(id, out var primary))
+                    {
+                        // Check if primary is now healthy
+                        string primaryStatus = PingSensor("127.0.0.1", primary.Port);
+                        if (primaryStatus.StartsWith("HEALTHY") || primaryStatus.StartsWith("WARN"))
+                        {
+                            Console.WriteLine($"→ Primary recovered. Switching back to: {primary.Name}");
+                            activeSensors[id] = primary;
+                        }
+                    }
                 }
 
                 Console.WriteLine("\nPress Ctrl+C to exit.");

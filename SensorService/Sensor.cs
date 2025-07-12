@@ -13,6 +13,7 @@ namespace SensorService
         private static readonly Random random = new();
         private const double HEALTHY_CAP = 0.9;
         private const double WARN_CAP = 0.8;
+        private int fallbackRecover;
 
         public Sensor(string id, string name)
         {
@@ -20,12 +21,16 @@ namespace SensorService
             Name = name;
             Health = 1.0;
             FallbackMode = false;
+            fallbackRecover = 0;
         }
 
         public string CheckHealth()
         {
-            if (FallbackMode)
+            if (FallbackMode && fallbackRecover < 3)
+            {
+                fallbackRecover++;
                 return $"FALLBACK {Health:F2}";
+            }
 
             double roll = random.NextDouble();
 
@@ -51,6 +56,7 @@ namespace SensorService
         public string RestartAndReport()
         {
             FallbackMode = false;
+            fallbackRecover = 0;
             Health = 0.95;
             return $"RESTARTED {Health:F2}";
         }
